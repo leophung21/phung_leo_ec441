@@ -1,0 +1,233 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{EC441 Lecture 7 Summary \\ Multiple Access Protocols}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Multiple Access Problem}
+
+A broadcast channel is a shared medium where transmissions from any node are received by all others.
+Simultaneous transmissions cause collisions, destroying frames.
+
+MAC (Multiple Access Control) protocols determine:
+\begin{itemize}
+\item When a node may transmit
+\item How collisions are handled
+\end{itemize}
+
+An ideal MAC protocol:
+\begin{itemize}
+\item Gives full rate when one node transmits
+\item Shares rate fairly among $M$ nodes ($R/M$)
+\item Is decentralized
+\item Is simple
+\end{itemize}
+
+Three MAC families:
+\begin{itemize}
+\item Channel partitioning
+\item Taking turns
+\item Random access
+\end{itemize}
+
+\section{Channel Partitioning}
+
+\subsection{TDMA}
+Time divided into frames and slots.
+Each node gets a fixed slot.
+
+Pros:
+\begin{itemize}
+\item No collisions
+\item Guaranteed rate
+\end{itemize}
+
+Cons:
+\begin{itemize}
+\item Idle slots waste capacity
+\end{itemize}
+
+\subsection{FDMA}
+Bandwidth divided into frequency bands.
+
+Same tradeoff as TDMA.
+
+\subsection{CDMA}
+Nodes transmit simultaneously using orthogonal codes.
+Used in 3G cellular and GPS.
+
+Partitioning works best under heavy, predictable load.
+
+\section{Taking Turns}
+
+\subsection{Polling}
+Coordinator grants permission to transmit.
+
+Pros:
+\begin{itemize}
+\item No collisions
+\end{itemize}
+
+Cons:
+\begin{itemize}
+\item Coordinator failure risk
+\item Control overhead
+\end{itemize}
+
+\subsection{Token Passing}
+A token circulates; only the token holder transmits.
+
+Pros:
+\begin{itemize}
+\item Predictable latency
+\end{itemize}
+
+Cons:
+\begin{itemize}
+\item Token loss
+\item Ring failure
+\end{itemize}
+
+\section{Random Access — ALOHA}
+
+\subsection{Pure ALOHA}
+
+Transmit immediately. Retransmit after collision.
+
+Collision window: $2T$
+
+Throughput:
+\[
+S = G e^{-2G}
+\]
+
+Maximum throughput:
+\[
+S_{\max} = \frac{1}{2e} \approx 0.18
+\]
+
+Efficiency is low due to collisions.
+
+\subsection{Slotted ALOHA}
+
+Time divided into slots of length $T$.
+
+Collision window reduced to $T$.
+
+Throughput:
+\[
+S = G e^{-G}
+\]
+
+Maximum throughput:
+\[
+S_{\max} = \frac{1}{e} \approx 0.37
+\]
+
+Slotted ALOHA is exactly twice as efficient as pure ALOHA.
+
+\section{CSMA — Carrier Sense Multiple Access}
+
+Key idea: listen before transmitting.
+
+Collisions occur only within propagation delay $\tau$.
+
+Efficiency improves when:
+\[
+a = \frac{\tau}{T} \text{ is small}
+\]
+
+Variants:
+\begin{itemize}
+\item 1-persistent
+\item Non-persistent
+\item $p$-persistent
+\end{itemize}
+
+\section{CSMA/CD — Collision Detection}
+
+Used in classic Ethernet.
+
+Algorithm:
+\begin{enumerate}
+\item Sense channel
+\item Transmit if idle
+\item Monitor while transmitting
+\item Abort on collision
+\item Binary exponential backoff
+\end{enumerate}
+
+Binary exponential backoff:
+\[
+\text{Wait} \in \{0, \ldots, 2^{k}-1\}
+\]
+
+Minimum Ethernet frame size ensures collision detection:
+\[
+L_{\min} \ge 2 \tau R
+\]
+
+Classic Ethernet result:
+\[
+L_{\min} = 64 \text{ bytes}
+\]
+
+CSMA/CD efficiency:
+\[
+\eta = \frac{1}{1 + 5a}
+\]
+
+Modern switched Ethernet is full-duplex, so CSMA/CD is mostly historical.
+
+\section{Wireless — CSMA/CA}
+
+Collision detection fails in wireless because:
+\begin{itemize}
+\item Self-interference
+\item Hidden terminal problem
+\end{itemize}
+
+WiFi uses collision avoidance:
+\begin{itemize}
+\item Random backoff before transmission
+\item RTS/CTS reservation (optional)
+\item ACK-based reliability
+\end{itemize}
+
+\section{Protocol Comparison}
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Family & Protocol & Used In & Mechanism \\
+\midrule
+Partitioning & TDMA & Cellular, satellite & Time slots \\
+Partitioning & FDMA & Radio, cable & Frequency bands \\
+Taking turns & Token Ring & Legacy LAN & Token \\
+Random access & Pure ALOHA & Packet radio & Transmit freely \\
+Random access & Slotted ALOHA & Satellite, LTE & Slot sync \\
+Random access & CSMA/CD & Classic Ethernet & Detect collisions \\
+Random access & CSMA/CA & WiFi & Avoid collisions \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Key Numbers}
+
+\begin{itemize}
+\item Pure ALOHA max: $\approx 18\%$
+\item Slotted ALOHA max: $\approx 37\%$
+\item Slotted = 2x Pure ALOHA
+\item Ethernet minimum frame: $64$ bytes
+\item CSMA/CD efficiency: $\eta = \frac{1}{1 + 5a}$
+\end{itemize}
+
+\end{document}

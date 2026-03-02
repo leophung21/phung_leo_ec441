@@ -1,0 +1,271 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{margin=1in}
+
+\title{EC 441 -- Week Review \\ Multiple Access Protocols and Ethernet}
+\date{}
+\begin{document}
+\maketitle
+
+\section*{Overview}
+This week covered how nodes share a broadcast channel (MAC protocols) and how Ethernet implements link-layer delivery using frames, MAC addresses, ARP, and switching.
+
+\hrule
+\vspace{0.5cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Lecture 7: Multiple Access Protocols}
+
+\subsection{The Multiple Access Problem}
+On a shared broadcast medium (e.g., classic Ethernet, WiFi, satellite), multiple nodes may transmit simultaneously, causing collisions.  
+A MAC protocol coordinates who transmits and when.
+
+\subsection{Channel Partitioning Protocols}
+
+\subsubsection*{TDMA (Time Division Multiple Access)}
+\begin{itemize}
+    \item Time divided into slots.
+    \item Each node gets one fixed slot per frame.
+    \item No collisions.
+    \item Inefficient when nodes are idle.
+\end{itemize}
+
+\subsubsection*{FDMA (Frequency Division Multiple Access)}
+\begin{itemize}
+    \item Frequency band divided into sub-bands.
+    \item Each node permanently assigned one band.
+    \item Suffers from idle bandwidth waste.
+\end{itemize}
+
+\textbf{Key limitation:} Partitioning wastes capacity under bursty traffic.
+
+\subsection{Taking Turns}
+
+\subsubsection*{Polling}
+\begin{itemize}
+    \item Central coordinator polls nodes.
+    \item No collisions.
+    \item Single point of failure.
+\end{itemize}
+
+\subsubsection*{Token Passing}
+\begin{itemize}
+    \item Token circulates in a logical ring.
+    \item Only token holder may transmit.
+    \item Predictable latency.
+\end{itemize}
+
+\subsection{Random Access Protocols}
+
+\subsubsection*{Pure ALOHA}
+\begin{itemize}
+    \item Transmit immediately.
+    \item Retransmit after random delay if collision.
+    \item Collision window: $2T$.
+\end{itemize}
+
+Throughput:
+\[
+S = G e^{-2G}
+\]
+Maximum:
+\[
+S_{max} = \frac{1}{2e} \approx 0.18
+\]
+
+\subsubsection*{Slotted ALOHA}
+\begin{itemize}
+    \item Transmissions start at slot boundaries.
+    \item Collision window reduced to $T$.
+\end{itemize}
+
+Throughput:
+\[
+S = G e^{-G}
+\]
+Maximum:
+\[
+S_{max} = \frac{1}{e} \approx 0.37
+\]
+
+\subsection{CSMA (Carrier Sense Multiple Access)}
+\begin{itemize}
+    \item Listen before transmitting.
+    \item Collisions only occur within propagation delay $\tau$.
+    \item Much higher efficiency than ALOHA.
+\end{itemize}
+
+\subsection{CSMA/CD (Collision Detection)}
+\begin{enumerate}
+    \item Sense channel.
+    \item Transmit if idle.
+    \item Detect collision while transmitting.
+    \item Send jam signal.
+    \item Binary exponential backoff.
+\end{enumerate}
+
+Binary exponential backoff:
+\[
+\text{Wait from } \{0,1,\dots,2^{\min(k,10)}-1\}
+\]
+
+\subsection{Minimum Frame Size Constraint}
+
+To detect collisions:
+\[
+T \ge 2\tau
+\]
+
+Since $T = \frac{L}{R}$:
+\[
+L \ge 2\tau R
+\]
+
+Classic Ethernet:
+\[
+L_{min} = 64 \text{ bytes}
+\]
+
+Modern switched Ethernet is full-duplex, so CSMA/CD is not used.
+
+\subsection{Wireless Limitation}
+Collision detection fails in wireless due to:
+\begin{itemize}
+    \item Self-interference.
+    \item Hidden terminal problem.
+\end{itemize}
+
+WiFi uses CSMA/CA (collision avoidance) instead.
+
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Lecture 8: Ethernet, Addressing, Switching, ARP}
+
+\subsection{Ethernet Frame Structure}
+
+\begin{center}
+Preamble | Dst MAC | Src MAC | Type | Payload | FCS
+\end{center}
+
+\begin{itemize}
+    \item Preamble (7B) + SFD (1B)
+    \item Destination MAC (6B)
+    \item Source MAC (6B)
+    \item Type (2B)
+    \item Payload (46--1500B)
+    \item FCS (4B, CRC-32)
+\end{itemize}
+
+\textbf{Minimum frame size:} 64 bytes  
+\textbf{Maximum frame size:} 1518 bytes
+
+\subsection{MAC Addresses}
+
+48-bit identifier written in hex:
+\[
+\texttt{A4:C3:F0:85:AC:2D}
+\]
+
+\begin{itemize}
+    \item First 3 bytes: OUI (manufacturer).
+    \item Last 3 bytes: device-specific.
+    \item Broadcast: FF:FF:FF:FF:FF:FF
+\end{itemize}
+
+MAC addresses are \textbf{flat}.  
+IP addresses are \textbf{hierarchical}.
+
+\subsection{ARP (Address Resolution Protocol)}
+
+Purpose: Resolve IP address to MAC address within a subnet.
+
+\textbf{ARP Request:}
+\begin{itemize}
+    \item Broadcast frame.
+    \item "Who has IP X?"
+\end{itemize}
+
+\textbf{ARP Reply:}
+\begin{itemize}
+    \item Unicast back to requester.
+    \item Contains MAC address.
+\end{itemize}
+
+Entries stored in ARP cache with TTL.
+
+\subsection{Subnets}
+
+CIDR notation:
+\[
+192.168.1.0/24
+\]
+
+\begin{itemize}
+    \item First 24 bits: network prefix.
+    \item Remaining bits: host portion.
+\end{itemize}
+
+ARP works only within a subnet.  
+Cross-subnet traffic requires a router.
+
+\subsection{Switching and Self-Learning}
+
+Switch builds a forwarding table:
+
+\begin{center}
+MAC Address $\rightarrow$ Port
+\end{center}
+
+Algorithm:
+\begin{enumerate}
+    \item Learn source MAC on incoming port.
+    \item If destination known → forward to specific port.
+    \item If unknown → flood.
+    \item Broadcast → flood.
+\end{enumerate}
+
+Entries expire after inactivity.
+
+\subsection{Hub vs Switch}
+
+\textbf{Hub:}
+\begin{itemize}
+    \item Repeats to all ports.
+    \item Single collision domain.
+\end{itemize}
+
+\textbf{Switch:}
+\begin{itemize}
+    \item Forwards selectively.
+    \item Each port is its own collision domain.
+    \item Full-duplex.
+\end{itemize}
+
+\subsection{Ethernet Evolution}
+
+10 Mb/s → 100 Mb/s → 1 Gb/s → 10/100/400 Gb/s
+
+Line codes evolved:
+\begin{itemize}
+    \item Manchester (10 Mb/s)
+    \item 4B5B + MLT-3 (100 Mb/s)
+    \item PAM-5 (1 Gb/s)
+    \item PAM-4 + DSP (10+ Gb/s)
+\end{itemize}
+
+\section*{Big Picture Connections}
+
+\begin{itemize}
+    \item Lecture 7 explains \textbf{why 64-byte minimum frame exists}.
+    \item Lecture 8 shows how switching removed collisions but kept frame format.
+    \item ARP connects network layer (IP) to link layer (MAC).
+    \item Modern Ethernet: switched, full-duplex, high-speed, backward-compatible.
+\end{itemize}
+
+\end{document}

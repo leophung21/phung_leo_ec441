@@ -1,0 +1,172 @@
+\section{IP Addressing, CIDR, and Subnetting Summary}
+
+\subsection{IPv4 Address Structure}
+An IPv4 address is a 32-bit value divided into two parts:
+\begin{itemize}
+    \item \textbf{Network portion} -- identifies the network
+    \item \textbf{Host portion} -- identifies a device within that network
+\end{itemize}
+
+The prefix length (/N) specifies how many bits belong to the network. The remaining $(32 - N)$ bits represent the host.
+
+\textbf{Key idea:} This split enables hierarchical routing, allowing routers to forward packets based on network prefixes instead of individual hosts. \\
+\textit{(Prevents routing tables from becoming too large)} :contentReference[oaicite:0]{index=0}
+
+\subsection{Classful Addressing (Deprecated)}
+Originally, IP addresses were divided into classes:
+
+\begin{itemize}
+    \item Class A: /8
+    \item Class B: /16
+    \item Class C: /24
+\end{itemize}
+
+\textbf{Problems:}
+\begin{itemize}
+    \item Address space waste (allocations too large or too small)
+    \item Routing table explosion (no aggregation)
+\end{itemize}
+
+This led to the adoption of CIDR.
+
+\subsection{CIDR (Classless Inter-Domain Routing)}
+CIDR allows flexible prefix lengths and efficient allocation.
+
+\begin{itemize}
+    \item Any prefix length is valid (e.g., /19, /27)
+    \item Prefix explicitly written (e.g., 192.168.1.0/24)
+    \item Enables route aggregation (supernetting)
+\end{itemize}
+
+\textbf{Subnet Mask:}
+A subnet mask is a 32-bit value with $N$ ones followed by zeros.
+
+\begin{center}
+/24 $\rightarrow$ 255.255.255.0 \\
+/26 $\rightarrow$ 255.255.255.192
+\end{center}
+
+\subsection{Network Calculations}
+\begin{itemize}
+    \item \textbf{Network Address:} IP $\AND$ subnet mask
+    \item \textbf{Broadcast Address:} all host bits = 1
+    \item \textbf{Usable Hosts:} $2^{(32-N)} - 2$
+\end{itemize}
+
+Example:
+\begin{itemize}
+    \item 192.168.1.0/24
+    \item Network: 192.168.1.0
+    \item Broadcast: 192.168.1.255
+    \item Usable: 254 hosts
+\end{itemize} :contentReference[oaicite:1]{index=1}
+
+\subsection{Route Aggregation}
+CIDR allows combining multiple networks into one larger prefix.
+
+Example:
+\begin{itemize}
+    \item 192.168.0.0/24
+    \item 192.168.1.0/24
+    \item 192.168.2.0/24
+    \item 192.168.3.0/24
+\end{itemize}
+
+Can be aggregated into:
+\begin{center}
+192.168.0.0/22
+\end{center}
+
+This reduces routing table size. :contentReference[oaicite:2]{index=2}
+
+\subsection{Subnetting}
+Subnetting divides a network into smaller sub-networks.
+
+\textbf{Process:}
+\begin{itemize}
+    \item Borrow $k$ bits from host portion
+    \item New prefix = $(N + k)$
+    \item Number of subnets = $2^k$
+\end{itemize}
+
+Example: Split 192.168.10.0/24 into 4 subnets:
+\begin{itemize}
+    \item New prefix: /26
+    \item Each subnet has 64 addresses (62 usable)
+\end{itemize}
+
+\textbf{Subnets:}
+\begin{itemize}
+    \item 192.168.10.0/26
+    \item 192.168.10.64/26
+    \item 192.168.10.128/26
+    \item 192.168.10.192/26
+\end{itemize} :contentReference[oaicite:3]{index=3}
+
+\subsection{Subnet Membership}
+To check if two hosts are in the same subnet:
+\begin{itemize}
+    \item Apply subnet mask to both
+    \item Compare resulting network addresses
+\end{itemize}
+
+\subsection{VLSM (Variable Length Subnet Masking)}
+Different subnets can have different sizes depending on need.
+
+\begin{itemize}
+    \item More efficient allocation
+    \item Requires careful planning to avoid overlap
+\end{itemize}
+
+\subsection{Special IPv4 Address Ranges}
+\begin{itemize}
+    \item \textbf{Private (RFC 1918):}
+    \begin{itemize}
+        \item 10.0.0.0/8
+        \item 172.16.0.0/12
+        \item 192.168.0.0/16
+    \end{itemize}
+    \item \textbf{Loopback:} 127.0.0.0/8
+    \item \textbf{Link-local:} 169.254.0.0/16
+    \item \textbf{Multicast:} 224.0.0.0/4
+\end{itemize} :contentReference[oaicite:4]{index=4}
+
+\subsection{Address Allocation Hierarchy}
+\begin{itemize}
+    \item IANA
+    \item Regional Internet Registries (RIRs)
+    \item ISPs
+    \item Organizations / End users
+\end{itemize}
+
+\subsection{IPv4 Exhaustion}
+IPv4 has $2^{32} \approx 4.3$ billion addresses.
+
+\begin{itemize}
+    \item Exhausted globally by 2011--2021
+    \item Addresses now bought/sold
+\end{itemize}
+
+\textbf{Solution:}
+\begin{itemize}
+    \item NAT -- allows many devices to share one IP
+    \item IPv6 -- 128-bit addressing ($2^{128}$ addresses)
+\end{itemize} :contentReference[oaicite:5]{index=5}
+
+\subsection{Python \texttt{ipaddress} Module}
+Python provides tools for subnet calculations:
+
+\begin{verbatim}
+import ipaddress
+net = ipaddress.IPv4Network("192.168.10.0/24")
+print(net.network_address)
+print(net.broadcast_address)
+print(net.hosts())
+\end{verbatim}
+
+Useful for:
+\begin{itemize}
+    \item Subnetting
+    \item Address validation
+    \item Network calculations
+\end{itemize}

@@ -1,0 +1,221 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Routing Notes: Link-State, Distance Vector, and BGP}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Overview of Routing}
+Routing algorithms compute forwarding tables (destination $\rightarrow$ next hop).
+
+Two main families:
+\begin{itemize}
+    \item \textbf{Link-State (LS)}: Global topology known
+    \item \textbf{Distance-Vector (DV)}: Only neighbor info known
+\end{itemize}
+
+\section{Graph Model}
+A network is modeled as a graph $G = (V, E)$:
+\begin{itemize}
+    \item $V$: routers (nodes)
+    \item $E$: links (edges)
+    \item $c(u,v)$: cost of link
+\end{itemize}
+
+\textbf{Goal:} Find shortest path (minimum cost) between nodes.
+
+\section{Link-State Routing (Lecture 15)}
+Each router:
+\begin{enumerate}
+    \item Discovers neighbors
+    \item Floods link-state advertisements (LSAs)
+    \item Computes shortest paths using Dijkstra
+\end{enumerate}
+
+\subsection{Dijkstra's Algorithm}
+Maintains:
+\begin{itemize}
+    \item $D(v)$: current shortest distance from source
+    \item $p(v)$: predecessor
+\end{itemize}
+
+\textbf{Core idea:} greedily expand shortest known node.
+
+\subsubsection*{Relaxation}
+\[
+\text{If } D(u) + c(u,v) < D(v), \text{ then update } D(v)
+\]
+
+\subsubsection*{Complexity}
+\[
+O(|V|^2) \quad \text{or} \quad O((|V|+|E|)\log|V|)
+\]
+
+\subsection{Shortest Path Tree (SPT)}
+Dijkstra builds an SPT rooted at the source.
+
+\textbf{Forwarding table:}
+\begin{itemize}
+    \item Only first hop matters
+    \item Derived from SPT
+\end{itemize}
+
+\subsection{OSPF}
+Real-world link-state protocol:
+\begin{itemize}
+    \item Uses LSAs + flooding
+    \item Runs directly over IP
+    \item Fast convergence (seconds)
+\end{itemize}
+
+\subsection{Issues}
+\begin{itemize}
+    \item High memory (full topology)
+    \item Possible oscillations with dynamic costs
+\end{itemize}
+
+\section{Distance-Vector Routing (Lecture 16)}
+Each router knows:
+\begin{itemize}
+    \item Cost to neighbors
+    \item Neighbors' distance vectors
+\end{itemize}
+
+\subsection{Bellman-Ford Equation}
+\[
+d_x(y) = \min_{v \in \text{neighbors}(x)} \{ c(x,v) + d_v(y) \}
+\]
+
+\textbf{Meaning:}
+Shortest path = best neighbor + their best path.
+
+\subsection{Distance-Vector Algorithm}
+\begin{enumerate}
+    \item Initialize distances
+    \item Send vector to neighbors
+    \item Update using Bellman-Ford
+    \item Repeat until convergence
+\end{enumerate}
+
+\textbf{Properties:}
+\begin{itemize}
+    \item Distributed
+    \item Iterative
+    \item Asynchronous
+\end{itemize}
+
+\subsection{Convergence}
+\begin{itemize}
+    \item Takes at most $|V| - 1$ rounds
+    \item Good news propagates fast
+    \item Bad news propagates slowly
+\end{itemize}
+
+\subsection{Count-to-Infinity Problem}
+After link failure:
+\begin{itemize}
+    \item Nodes form loops
+    \item Distances increase gradually
+\end{itemize}
+
+\subsection{Fixes}
+\begin{itemize}
+    \item \textbf{Split Horizon}: don't advertise back to source
+    \item \textbf{Poisoned Reverse}: advertise $\infty$
+\end{itemize}
+
+\subsection{RIP Protocol}
+\begin{itemize}
+    \item Metric: hop count
+    \item Max: 15 hops
+    \item Updates every 30s
+\end{itemize}
+
+\section{Link-State vs Distance-Vector}
+\begin{tabular}{|c|c|c|}
+\hline
+ & Link-State & Distance-Vector \\
+\hline
+Info & Full topology & Neighbor only \\
+\hline
+Speed & Fast & Slow (failures) \\
+\hline
+Loops & No & Possible \\
+\hline
+Example & OSPF & RIP \\
+\hline
+\end{tabular}
+
+\section{Why One Algorithm Isn't Enough}
+The Internet is too large:
+\begin{itemize}
+    \item Millions of routes
+    \item Many organizations
+    \item Different policies
+\end{itemize}
+
+\section{Autonomous Systems (AS)}
+\begin{itemize}
+    \item Group of networks under one admin
+    \item Each has an ASN
+\end{itemize}
+
+\textbf{Types:}
+\begin{itemize}
+    \item Stub
+    \item Multi-homed
+    \item Transit
+\end{itemize}
+
+\section{BGP (Border Gateway Protocol)}
+Inter-AS routing protocol.
+
+\subsection{Key Functions}
+\begin{itemize}
+    \item Advertise reachable prefixes
+    \item Share AS paths
+    \item Enforce policies
+\end{itemize}
+
+\subsection{Path Vector}
+BGP uses:
+\begin{itemize}
+    \item AS-PATH instead of distance
+\end{itemize}
+
+Loop prevention:
+\begin{itemize}
+    \item Reject routes containing own ASN
+\end{itemize}
+
+\subsection{Business Relationships}
+\begin{itemize}
+    \item Customer $\leftrightarrow$ Provider
+    \item Peer-to-peer
+\end{itemize}
+
+\textbf{Valley-free routing:}
+\[
+\text{Customer} \rightarrow \text{Provider} \rightarrow \text{Peer} \rightarrow \text{Customer}
+\]
+
+\subsection{Challenges}
+\begin{itemize}
+    \item Policy over shortest path
+    \item Slow convergence (minutes)
+    \item Large scale (millions of routes)
+    \item Trust-based system
+\end{itemize}
+
+\section{Big Picture}
+\begin{itemize}
+    \item Intra-AS: OSPF (link-state) or RIP (DV)
+    \item Inter-AS: BGP (policy-based)
+\end{itemize}
+
+\end{document}

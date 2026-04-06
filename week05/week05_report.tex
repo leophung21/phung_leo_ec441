@@ -1,0 +1,153 @@
+\section{Transport Layer, UDP, and Reliable Data Transfer}
+
+\subsection{Overview of the Transport Layer}
+The transport layer provides \textbf{process-to-process communication} on top of the network layer's host-to-host delivery. It enables multiple applications on the same host to communicate simultaneously using \textbf{ports} and \textbf{sockets}. :contentReference[oaicite:0]{index=0}
+
+\textbf{Key responsibilities:}
+\begin{itemize}
+    \item Multiplexing: combining data from multiple applications
+    \item Demultiplexing: delivering data to the correct process
+    \item Providing logical communication between processes
+\end{itemize}
+
+\subsection{Ports and Sockets}
+Each transport endpoint is identified using a \textbf{socket}, defined by a 5-tuple:
+\[
+(\text{protocol}, \text{local IP}, \text{local port}, \text{remote IP}, \text{remote port})
+\]
+
+\textbf{Port ranges:}
+\begin{itemize}
+    \item 0--1023: Well-known ports
+    \item 1024--49151: Registered ports
+    \item 49152--65535: Ephemeral ports
+\end{itemize}
+
+\subsection{User Datagram Protocol (UDP)}
+UDP is a \textbf{connectionless} transport protocol that provides minimal services.
+
+\textbf{Characteristics:}
+\begin{itemize}
+    \item No reliability guarantees
+    \item No ordering or duplicate detection
+    \item No congestion or flow control
+    \item Low overhead (8-byte header)
+\end{itemize}
+
+\textbf{UDP Header Fields:}
+\begin{itemize}
+    \item Source Port
+    \item Destination Port
+    \item Length
+    \item Checksum
+\end{itemize}
+
+\textbf{When to use UDP:}
+\begin{itemize}
+    \item Real-time applications (VoIP, gaming)
+    \item Query-response protocols (DNS, NTP)
+    \item Multicast/broadcast communication
+    \item Applications implementing custom reliability (e.g., QUIC)
+\end{itemize}
+
+\subsection{UDP Checksum}
+UDP uses a checksum for error detection over:
+\begin{itemize}
+    \item Pseudo-header (IP info)
+    \item UDP header
+    \item Data
+\end{itemize}
+It detects bit errors but does not guarantee delivery.
+
+\subsection{Reliable Data Transfer (RDT)}
+Reliable data transfer must handle:
+\begin{itemize}
+    \item Packet loss
+    \item Packet corruption
+\end{itemize}
+
+\textbf{Key mechanisms:}
+\begin{itemize}
+    \item Checksums
+    \item Acknowledgments (ACKs)
+    \item Sequence numbers
+    \item Timers
+\end{itemize}
+
+\subsection{Stop-and-Wait Protocol}
+A simple ARQ protocol where the sender transmits one packet and waits for an ACK.
+
+\textbf{Key properties:}
+\begin{itemize}
+    \item Only one packet in flight
+    \item Uses sequence numbers (0/1) to detect duplicates
+\end{itemize}
+
+\textbf{Utilization:}
+\[
+U = \frac{t_{tx}}{RTT + t_{tx}}
+\]
+
+This leads to very poor efficiency when $RTT \gg t_{tx}$.
+
+\subsection{Bandwidth-Delay Product (BDP)}
+The bandwidth-delay product represents the number of bits in transit:
+\[
+BDP = B \times RTT
+\]
+
+To fully utilize a link, multiple packets must be in flight simultaneously.
+
+\subsection{Pipelining}
+Pipelining allows multiple unacknowledged packets to be sent, improving utilization.
+
+\subsection{Go-Back-N (GBN)}
+A sliding window protocol with the following properties:
+\begin{itemize}
+    \item Cumulative ACKs
+    \item Single timer
+    \item Receiver discards out-of-order packets
+    \item Retransmits entire window on loss
+\end{itemize}
+
+\textbf{Constraint:}
+\[
+N \leq 2^k - 1
+\]
+
+\subsection{Selective Repeat (SR)}
+An improved sliding window protocol:
+\begin{itemize}
+    \item Individual ACKs
+    \item Multiple timers
+    \item Receiver buffers out-of-order packets
+    \item Retransmits only lost packets
+\end{itemize}
+
+\textbf{Constraint:}
+\[
+N \leq 2^{k-1}
+\]
+
+\subsection{Go-Back-N vs Selective Repeat}
+\begin{itemize}
+    \item GBN is simpler but inefficient under packet loss
+    \item SR is more efficient but requires more complexity and buffering
+\end{itemize}
+
+\subsection{TCP Design Insights}
+TCP combines ideas from both GBN and SR:
+\begin{itemize}
+    \item Uses cumulative ACKs (like GBN)
+    \item Buffers out-of-order packets (like SR)
+    \item Uses Selective Acknowledgment (SACK) for efficiency
+\end{itemize}
+
+\subsection{Looking Ahead}
+A complete transport protocol must also handle:
+\begin{itemize}
+    \item Flow control
+    \item Congestion control
+    \item Connection setup and teardown
+    \item Byte-stream abstraction
+\end{itemize}

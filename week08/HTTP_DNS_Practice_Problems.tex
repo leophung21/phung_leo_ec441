@@ -1,0 +1,405 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage[margin=1in]{geometry}
+
+\title{DNS and HTTP Practice Problems}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{DNS Practice Problems}
+
+\subsection*{Problem 1: DNS Resolution Chain}
+A user types:
+\[
+\texttt{www.eng.bu.edu}
+\]
+into a browser. Explain the DNS resolution process.
+
+\subsection*{Solution}
+The user's laptop first sends the query to a recursive resolver, such as an ISP resolver, Google DNS, or Cloudflare DNS.
+
+If the recursive resolver does not already have the answer cached, it performs iterative queries:
+
+\begin{enumerate}
+    \item Ask a root DNS server:
+    \[
+    \text{Who handles } \texttt{.edu}?
+    \]
+    \item Ask a \texttt{.edu} TLD server:
+    \[
+    \text{Who handles } \texttt{bu.edu}?
+    \]
+    \item Ask the \texttt{bu.edu} authoritative server:
+    \[
+    \text{Who handles } \texttt{eng.bu.edu}?
+    \]
+    \item Ask the \texttt{eng.bu.edu} authoritative server:
+    \[
+    \text{What is the A record for } \texttt{www.eng.bu.edu}?
+    \]
+\end{enumerate}
+
+The final IP address is returned to the recursive resolver, then back to the user's laptop.
+
+\[
+\boxed{\text{The laptop only talks directly to the recursive resolver.}}
+\]
+
+\subsection*{Problem 2: DNS Record Types}
+Match each DNS record type with its purpose.
+
+\[
+\begin{array}{c|c}
+\text{Record Type} & \text{Purpose} \\
+\hline
+A & ? \\
+AAAA & ? \\
+CNAME & ? \\
+MX & ? \\
+NS & ? \\
+TXT & ?
+\end{array}
+\]
+
+\subsection*{Solution}
+
+\[
+\begin{array}{c|c}
+\text{Record Type} & \text{Purpose} \\
+\hline
+A & \text{Maps a domain name to an IPv4 address} \\
+AAAA & \text{Maps a domain name to an IPv6 address} \\
+CNAME & \text{Creates an alias to another domain name} \\
+MX & \text{Specifies mail servers for a domain} \\
+NS & \text{Specifies name servers for a zone} \\
+TXT & \text{Stores text data such as SPF, DKIM, or verification records}
+\end{array}
+\]
+
+\[
+\boxed{\text{DNS records tell resolvers what kind of information a domain has.}}
+\]
+
+\subsection*{Problem 3: DNS Caching and TTL}
+A DNS record has a TTL of:
+\[
+300 \text{ seconds}
+\]
+A recursive resolver receives the record at time:
+\[
+t = 0
+\]
+At what time must the resolver stop using the cached answer?
+
+\subsection*{Solution}
+TTL stands for Time To Live. It tells the resolver how long it may cache the answer.
+
+\[
+t_{\text{expire}} = t_{\text{start}} + TTL
+\]
+
+\[
+t_{\text{expire}} = 0 + 300
+\]
+
+\[
+\boxed{t_{\text{expire}} = 300 \text{ seconds}}
+\]
+
+After 300 seconds, the resolver must query again instead of using the cached record.
+
+\subsection*{Problem 4: Low TTL vs High TTL}
+A website sets its DNS TTL to 300 seconds instead of 3600 seconds. What is the tradeoff?
+
+\subsection*{Solution}
+A lower TTL means DNS changes update faster.
+
+\[
+300 \text{ seconds} = 5 \text{ minutes}
+\]
+
+\[
+3600 \text{ seconds} = 1 \text{ hour}
+\]
+
+With a TTL of 300 seconds, users will receive updated DNS information sooner.
+
+However, a lower TTL also means recursive resolvers must query authoritative servers more often.
+
+\[
+\boxed{\text{Low TTL gives faster updates but creates more DNS query load.}}
+\]
+
+\section*{HTTP Practice Problems}
+
+\subsection*{Problem 5: HTTP Request}
+Write a basic HTTP/1.1 GET request for:
+\[
+\texttt{https://example.com/index.html}
+\]
+
+\subsection*{Solution}
+A basic HTTP/1.1 request looks like:
+
+\[
+\begin{array}{l}
+\texttt{GET /index.html HTTP/1.1} \\
+\texttt{Host: example.com} \\
+\texttt{User-Agent: curl/8.4.0} \\
+\texttt{Accept: */*}
+\end{array}
+\]
+
+\[
+\boxed{\text{The request line includes the method, path, and HTTP version.}}
+\]
+
+\subsection*{Problem 6: HTTP Response}
+Given this HTTP response:
+
+\[
+\begin{array}{l}
+\texttt{HTTP/1.1 200 OK} \\
+\texttt{Content-Type: text/html; charset=UTF-8} \\
+\texttt{Content-Length: 1256} \\
+\texttt{Connection: keep-alive}
+\end{array}
+\]
+
+Answer the following:
+\begin{enumerate}
+    \item Was the request successful?
+    \item What type of content was returned?
+    \item How large is the body?
+    \item Will the TCP connection stay open?
+\end{enumerate}
+
+\subsection*{Solution}
+
+\begin{enumerate}
+    \item Yes. The status code is:
+    \[
+    200
+    \]
+    which means success.
+
+    \item The content type is:
+    \[
+    \texttt{text/html}
+    \]
+    so the response contains an HTML document.
+
+    \item The body length is:
+    \[
+    1256 \text{ bytes}
+    \]
+
+    \item Yes. The header:
+    \[
+    \texttt{Connection: keep-alive}
+    \]
+    means the TCP connection can be reused.
+\end{enumerate}
+
+\[
+\boxed{\text{This is a successful HTTP response carrying an HTML page.}}
+\]
+
+\subsection*{Problem 7: HTTP Status Codes}
+Classify each HTTP status code.
+
+\[
+\begin{array}{c|c}
+\text{Status Code} & \text{Meaning} \\
+\hline
+200 & ? \\
+301 & ? \\
+404 & ? \\
+500 & ?
+\end{array}
+\]
+
+\subsection*{Solution}
+
+\[
+\begin{array}{c|c}
+\text{Status Code} & \text{Meaning} \\
+\hline
+200 & \text{Success} \\
+301 & \text{Redirect} \\
+404 & \text{Client error, resource not found} \\
+500 & \text{Server error}
+\end{array}
+\]
+
+\[
+\boxed{
+\begin{array}{c}
+2xx = \text{success} \\
+3xx = \text{redirect} \\
+4xx = \text{client error} \\
+5xx = \text{server error}
+\end{array}
+}
+\]
+
+\subsection*{Problem 8: HTTP/1.1 Head-of-Line Blocking}
+Why did HTTP/1.1 pipelining fail in practice?
+
+\subsection*{Solution}
+HTTP/1.1 pipelining allowed multiple requests to be sent on one TCP connection.
+
+However, responses had to come back in the same order as the requests.
+
+Suppose the client sends:
+
+\[
+R_1, R_2, R_3
+\]
+
+If response \(R_1\) is slow, then \(R_2\) and \(R_3\) must wait, even if they are ready.
+
+\[
+R_1 \text{ slow} \Rightarrow R_2 \text{ blocked} \Rightarrow R_3 \text{ blocked}
+\]
+
+\[
+\boxed{\text{One slow response blocks every response behind it.}}
+\]
+
+This is called application-layer head-of-line blocking.
+
+\subsection*{Problem 9: HTTP/2 Multiplexing}
+How does HTTP/2 improve on HTTP/1.1?
+
+\subsection*{Solution}
+HTTP/2 keeps the same HTTP meaning, such as:
+
+\[
+\text{methods, headers, status codes}
+\]
+
+but changes the wire format.
+
+HTTP/2 uses:
+
+\begin{enumerate}
+    \item Binary framing
+    \item Multiplexing
+    \item Header compression
+\end{enumerate}
+
+With multiplexing, many streams can share one TCP connection.
+
+\[
+\text{Stream 1, Stream 2, Stream 3} \rightarrow \text{One TCP connection}
+\]
+
+Frames from different streams can be interleaved.
+
+\[
+\boxed{\text{HTTP/2 solves HTTP/1.1 application-layer head-of-line blocking.}}
+\]
+
+\subsection*{Problem 10: HTTP/3 and QUIC}
+Why does HTTP/3 use QUIC over UDP instead of TCP?
+
+\subsection*{Solution}
+HTTP/2 still runs over TCP. Even though HTTP/2 multiplexes streams, TCP delivers bytes in order.
+
+If one TCP segment is lost, all streams must wait.
+
+\[
+\text{Lost TCP segment} \Rightarrow \text{all HTTP/2 streams stall}
+\]
+
+HTTP/3 uses QUIC, which runs over UDP.
+
+QUIC provides independent streams, so if one stream has packet loss, the others can continue.
+
+\[
+\text{Lost packet in Stream 1} \not\Rightarrow \text{Stream 2 blocked}
+\]
+
+\[
+\boxed{\text{HTTP/3 removes TCP-layer head-of-line blocking.}}
+\]
+
+\section*{Mixed DNS and HTTP Problems}
+
+\subsection*{Problem 11: Loading a Web Page}
+A browser loads:
+
+\[
+\texttt{www.example.com}
+\]
+
+Explain what happens first: DNS or HTTP?
+
+\subsection*{Solution}
+DNS happens first.
+
+The browser needs an IP address before it can open a connection to the server.
+
+The order is:
+
+\begin{enumerate}
+    \item Browser asks DNS for the IP address of \texttt{www.example.com}
+    \item DNS returns an IP address
+    \item Browser opens a transport connection
+    \item Browser sends an HTTP request
+    \item Server returns an HTTP response
+\end{enumerate}
+
+\[
+\boxed{\text{DNS finds the server. HTTP asks the server for the resource.}}
+\]
+
+\subsection*{Problem 12: Browser as Coordinator}
+HTTP fetches one resource at a time. Explain why loading one web page can create many HTTP requests.
+
+\subsection*{Solution}
+The first HTTP request usually fetches an HTML document.
+
+That HTML document may reference many other resources:
+
+\[
+\text{CSS, JavaScript, images, videos, fonts}
+\]
+
+The browser parses the HTML and sends additional HTTP requests for those resources.
+
+For example:
+
+\[
+1 \text{ HTML file} + 20 \text{ images} + 3 \text{ CSS files} + 5 \text{ JS files}
+\]
+
+\[
+= 29 \text{ HTTP requests}
+\]
+
+\[
+\boxed{\text{The browser coordinates many HTTP fetches to build one web page.}}
+\]
+
+\section*{Quick Review}
+
+\[
+\boxed{
+\begin{array}{l}
+\text{DNS maps names to IP addresses.} \\
+\text{HTTP fetches resources from servers.} \\
+\text{HTTP/1.1 is text-based and uses keep-alive.} \\
+\text{HTTP/2 adds binary framing and multiplexing.} \\
+\text{HTTP/3 uses QUIC over UDP to avoid TCP head-of-line blocking.}
+\end{array}
+}
+\]
+
+\end{document}

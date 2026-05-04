@@ -1,0 +1,625 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\title{EC441 Worked Problems: DNS, HTTP, and QUIC}
+\author{}
+\date{}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single
+}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 1: DNS Namespace}
+
+Break down the DNS name:
+
+\[
+\texttt{www.eng.bu.edu.}
+\]
+
+Identify the host, subdomain, second-level domain, top-level domain, and root.
+
+\subsection*{Solution}
+
+DNS names are read from right to left.
+
+\[
+\texttt{www.eng.bu.edu.}
+\]
+
+\[
+\begin{array}{c|c}
+\text{Component} & \text{Meaning} \\
+\hline
+\texttt{.} & \text{Root} \\
+\texttt{edu} & \text{Top-level domain} \\
+\texttt{bu} & \text{Second-level domain} \\
+\texttt{eng} & \text{Subdomain} \\
+\texttt{www} & \text{Host}
+\end{array}
+\]
+
+\[
+\boxed{\texttt{www.eng.bu.edu.} \text{ is a hierarchical DNS name.}}
+\]
+
+\section*{Problem 2: DNS Resolution Chain}
+
+A laptop wants the IP address for:
+
+\[
+\texttt{www.eng.bu.edu}
+\]
+
+Assume the recursive resolver has nothing cached. List the steps needed to resolve the name.
+
+\subsection*{Solution}
+
+The laptop first sends the query to a recursive resolver.
+
+Then the recursive resolver walks the DNS hierarchy:
+
+\begin{enumerate}
+    \item Ask a root server: ``Who handles \texttt{edu}?''
+    \item Ask an \texttt{edu} TLD server: ``Who handles \texttt{bu.edu}?''
+    \item Ask a \texttt{bu.edu} authoritative server: ``Who handles \texttt{eng.bu.edu}?''
+    \item Ask a \texttt{eng.bu.edu} authoritative server: ``What is the A record for \texttt{www.eng.bu.edu}?''
+\end{enumerate}
+
+The answer then returns back through the resolver to the laptop.
+
+\[
+\boxed{\text{The laptop asks the recursive resolver. The resolver does the walking.}}
+\]
+
+\section*{Problem 3: DNS TTL Calculation}
+
+A DNS record has a TTL of:
+
+\[
+1800 \text{ seconds}
+\]
+
+A recursive resolver receives the answer at:
+
+\[
+t = 240 \text{ seconds}
+\]
+
+At what time does the cached record expire?
+
+\subsection*{Solution}
+
+The expiration time is:
+
+\[
+t_{\text{expire}} = t_{\text{received}} + TTL
+\]
+
+Substitute values:
+
+\[
+t_{\text{expire}} = 240 + 1800
+\]
+
+\[
+t_{\text{expire}} = 2040
+\]
+
+\[
+\boxed{2040 \text{ seconds}}
+\]
+
+After this time, the resolver must query again instead of using the cached value.
+
+\section*{Problem 4: DNS Record Types}
+
+Fill in the purpose of each DNS record type.
+
+\[
+\begin{array}{c|c}
+\text{Record Type} & \text{Purpose} \\
+\hline
+A & ? \\
+AAAA & ? \\
+CNAME & ? \\
+MX & ? \\
+NS & ? \\
+TXT & ?
+\end{array}
+\]
+
+\subsection*{Solution}
+
+\[
+\begin{array}{c|p{9cm}}
+\text{Record Type} & \text{Purpose} \\
+\hline
+A & Maps a name to an IPv4 address. \\
+AAAA & Maps a name to an IPv6 address. \\
+CNAME & Creates an alias from one name to another name. \\
+MX & Lists mail exchange servers for a domain. \\
+NS & Lists name servers for a zone. \\
+TXT & Stores text data such as SPF, DKIM, or domain verification records.
+\end{array}
+\]
+
+\[
+\boxed{\text{Different DNS record types answer different kinds of questions.}}
+\]
+
+\section*{Problem 5: DNS Transport}
+
+For each DNS transport, identify the port and main purpose.
+
+\[
+\begin{array}{c|c|c}
+\text{Transport} & \text{Port} & \text{Use} \\
+\hline
+UDP & ? & ? \\
+TCP & ? & ? \\
+TLS & ? & ? \\
+HTTPS & ? & ?
+\end{array}
+\]
+
+\subsection*{Solution}
+
+\[
+\begin{array}{c|c|p{8cm}}
+\text{Transport} & \text{Port} & \text{Use} \\
+\hline
+UDP & 53 & Default DNS transport for small queries and replies. \\
+TCP & 53 & Large responses, zone transfers, and DNSSEC-related traffic. \\
+TLS & 853 & DNS over TLS, used for privacy. \\
+HTTPS & 443 & DNS over HTTPS, used for privacy and blending with web traffic.
+\end{array}
+\]
+
+\[
+\boxed{\text{Traditional DNS is usually UDP port 53.}}
+\]
+
+\section*{Problem 6: HTTP Request}
+
+Write a valid HTTP/1.1 GET request for:
+
+\[
+\texttt{http://example.com/index.html}
+\]
+
+\subsection*{Solution}
+
+A valid HTTP/1.1 request is:
+
+\begin{lstlisting}
+GET /index.html HTTP/1.1
+Host: example.com
+User-Agent: curl/8.4.0
+Accept: */*
+\end{lstlisting}
+
+The request line contains:
+
+\[
+\text{Method} + \text{Path} + \text{Version}
+\]
+
+\[
+\boxed{\texttt{GET /index.html HTTP/1.1}}
+\]
+
+\section*{Problem 7: HTTP Response Interpretation}
+
+Given the response:
+
+\begin{lstlisting}
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Content-Length: 1256
+Connection: keep-alive
+\end{lstlisting}
+
+Answer:
+
+\begin{enumerate}
+    \item Was the request successful?
+    \item What type of content was returned?
+    \item How large is the response body?
+    \item Will the TCP connection stay open?
+\end{enumerate}
+
+\subsection*{Solution}
+
+\begin{enumerate}
+    \item Yes. The status code is:
+    \[
+    200
+    \]
+    which means success.
+
+    \item The content type is:
+    \[
+    \texttt{text/html}
+    \]
+    so the response contains HTML.
+
+    \item The response body is:
+    \[
+    1256 \text{ bytes}
+    \]
+
+    \item Yes. The header:
+    \[
+    \texttt{Connection: keep-alive}
+    \]
+    means the TCP connection may be reused.
+\end{enumerate}
+
+\[
+\boxed{\text{This is a successful HTTP response carrying an HTML document.}}
+\]
+
+\section*{Problem 8: HTTP Status Code Classes}
+
+Classify the following HTTP status codes.
+
+\[
+\begin{array}{c|c}
+\text{Status Code} & \text{Class} \\
+\hline
+100 & ? \\
+200 & ? \\
+301 & ? \\
+404 & ? \\
+500 & ?
+\end{array}
+\]
+
+\subsection*{Solution}
+
+\[
+\begin{array}{c|c}
+\text{Status Code} & \text{Class} \\
+\hline
+100 & \text{Informational} \\
+200 & \text{Success} \\
+301 & \text{Redirect} \\
+404 & \text{Client error} \\
+500 & \text{Server error}
+\end{array}
+\]
+
+\[
+\boxed{
+\begin{array}{l}
+1xx = \text{Informational} \\
+2xx = \text{Success} \\
+3xx = \text{Redirect} \\
+4xx = \text{Client error} \\
+5xx = \text{Server error}
+\end{array}
+}
+\]
+
+\section*{Problem 9: HTTP Statelessness}
+
+HTTP is stateless, but websites still keep users logged in. Explain how this is possible.
+
+\subsection*{Solution}
+
+HTTP is stateless because each request stands alone. The protocol itself does not remember previous requests.
+
+Login state is usually handled using cookies.
+
+The process is:
+
+\begin{enumerate}
+    \item User logs in.
+    \item Server creates a session.
+    \item Server sends a cookie to the browser.
+    \item Browser stores the cookie.
+    \item Browser sends the cookie on future requests.
+    \item Server looks up the session associated with the cookie.
+\end{enumerate}
+
+\[
+\boxed{\text{The protocol is stateless, but cookies carry session identity.}}
+\]
+
+\section*{Problem 10: HTTP/1.1 Head-of-Line Blocking}
+
+A client sends three HTTP/1.1 pipelined requests:
+
+\[
+R_1,\ R_2,\ R_3
+\]
+
+The server can generate responses for \(R_2\) and \(R_3\) quickly, but \(R_1\) is slow.
+
+What happens?
+
+\subsection*{Solution}
+
+In HTTP/1.1 pipelining, responses must return in the same order as requests.
+
+So even if \(R_2\) and \(R_3\) are ready, they cannot be sent before \(R_1\).
+
+\[
+R_1 \text{ slow} \Rightarrow R_2 \text{ waits} \Rightarrow R_3 \text{ waits}
+\]
+
+\[
+\boxed{\text{One slow response blocks all later responses.}}
+\]
+
+This is application-layer head-of-line blocking.
+
+\section*{Problem 11: HTTP/2 Multiplexing}
+
+Explain how HTTP/2 solves HTTP/1.1 application-layer head-of-line blocking.
+
+\subsection*{Solution}
+
+HTTP/2 uses binary framing and multiplexing.
+
+Instead of sending whole responses strictly in order, HTTP/2 splits messages into frames.
+
+Frames from different streams can be interleaved:
+
+\[
+S_1,\ S_2,\ S_3
+\]
+
+can share the same TCP connection.
+
+For example:
+
+\[
+S_1 \text{ frame},\ S_2 \text{ frame},\ S_3 \text{ frame},\ S_1 \text{ frame}
+\]
+
+This means a slow response does not block unrelated responses at the HTTP layer.
+
+\[
+\boxed{\text{HTTP/2 solves application-layer HOL blocking using multiplexed streams.}}
+\]
+
+\section*{Problem 12: HTTP/2 Remaining Problem}
+
+HTTP/2 multiplexes many streams over one TCP connection. What head-of-line blocking problem remains?
+
+\subsection*{Solution}
+
+HTTP/2 still runs over TCP.
+
+TCP delivers bytes in order. If one TCP segment is lost, TCP cannot deliver later bytes to the application until the missing segment is retransmitted.
+
+Therefore, all HTTP/2 streams sharing that TCP connection can stall.
+
+\[
+\text{Lost TCP segment} \Rightarrow \text{TCP waits} \Rightarrow \text{all HTTP/2 streams wait}
+\]
+
+\[
+\boxed{\text{HTTP/2 still suffers from TCP-layer head-of-line blocking.}}
+\]
+
+\section*{Problem 13: HTTP/3 and QUIC}
+
+Why does HTTP/3 run over QUIC instead of TCP?
+
+\subsection*{Solution}
+
+HTTP/3 uses QUIC, which is a reliable transport protocol built on top of UDP.
+
+QUIC provides independent streams. If one packet is lost in one stream, other streams can continue.
+
+\[
+\text{Loss in Stream 1} \not\Rightarrow \text{Stream 2 blocked}
+\]
+
+QUIC also includes:
+
+\begin{itemize}
+    \item Built-in TLS 1.3
+    \item Faster connection setup
+    \item 0-RTT resumption
+    \item Connection migration
+\end{itemize}
+
+\[
+\boxed{\text{HTTP/3 uses QUIC to remove TCP-layer head-of-line blocking.}}
+\]
+
+\section*{Problem 14: HTTP Version Timeline}
+
+Fill in the missing entries.
+
+\[
+\begin{array}{c|c|c|c}
+\text{Version} & \text{Transport} & \text{Wire Format} & \text{Main Improvement} \\
+\hline
+\text{HTTP/1.0} & ? & ? & ? \\
+\text{HTTP/1.1} & ? & ? & ? \\
+\text{HTTP/2} & ? & ? & ? \\
+\text{HTTP/3} & ? & ? & ?
+\end{array}
+\]
+
+\subsection*{Solution}
+
+\[
+\begin{array}{c|c|c|p{5cm}}
+\text{Version} & \text{Transport} & \text{Wire Format} & \text{Main Improvement} \\
+\hline
+\text{HTTP/1.0} & \text{TCP} & \text{text} & \text{Basic HTTP request/response} \\
+\text{HTTP/1.1} & \text{TCP} & \text{text} & \text{Keep-alive and Host header} \\
+\text{HTTP/2} & \text{TCP} & \text{binary} & \text{Multiplexing and HPACK} \\
+\text{HTTP/3} & \text{QUIC over UDP} & \text{binary} & \text{Removes TCP HOL blocking and builds in TLS}
+\end{array}
+\]
+
+\[
+\boxed{\text{HTTP semantics stay mostly stable while transport and wire format evolve.}}
+\]
+
+\section*{Problem 15: Browser Loading a Web Page}
+
+A browser loads one HTML page that references:
+
+\[
+4 \text{ CSS files},\quad 8 \text{ JavaScript files},\quad 20 \text{ images}
+\]
+
+How many total HTTP requests are needed, assuming no cache hits?
+
+\subsection*{Solution}
+
+The browser first fetches the HTML page:
+
+\[
+1 \text{ HTML request}
+\]
+
+Then it fetches each referenced resource:
+
+\[
+4 + 8 + 20 = 32
+\]
+
+Total requests:
+
+\[
+1 + 32 = 33
+\]
+
+\[
+\boxed{33 \text{ HTTP requests}}
+\]
+
+\section*{Problem 16: MIME Types}
+
+Match each MIME type to its content.
+
+\[
+\begin{array}{c|c}
+\text{MIME Type} & \text{Content} \\
+\hline
+\texttt{text/html} & ? \\
+\texttt{text/css} & ? \\
+\texttt{application/json} & ? \\
+\texttt{image/png} & ? \\
+\texttt{video/mp4} & ?
+\end{array}
+\]
+
+\subsection*{Solution}
+
+\[
+\begin{array}{c|c}
+\text{MIME Type} & \text{Content} \\
+\hline
+\texttt{text/html} & \text{HTML document} \\
+\texttt{text/css} & \text{Stylesheet} \\
+\texttt{application/json} & \text{JSON data} \\
+\texttt{image/png} & \text{PNG image} \\
+\texttt{video/mp4} & \text{MP4 video}
+\end{array}
+\]
+
+\[
+\boxed{\text{The Content-Type header tells the browser how to interpret bytes.}}
+\]
+
+\section*{Problem 17: DNS vs HTTP}
+
+Which happens first when visiting:
+
+\[
+\texttt{http://example.com}
+\]
+
+DNS or HTTP? Explain.
+
+\subsection*{Solution}
+
+DNS happens first.
+
+The browser needs an IP address before it can open a transport connection to the web server.
+
+The order is:
+
+\begin{enumerate}
+    \item Resolve \texttt{example.com} using DNS.
+    \item Open a TCP connection to the returned IP address.
+    \item Send an HTTP request.
+    \item Receive an HTTP response.
+\end{enumerate}
+
+\[
+\boxed{\text{DNS finds the server. HTTP requests the resource.}}
+\]
+
+\section*{Problem 18: WebSocket}
+
+Why does WebSocket start as HTTP and then switch protocols?
+
+\subsection*{Solution}
+
+HTTP is request/response, which is not ideal for applications like:
+
+\[
+\text{chat, live dashboards, collaborative editing, multiplayer games}
+\]
+
+These applications need both sides to send data whenever events happen.
+
+WebSocket begins with an HTTP upgrade request:
+
+\begin{lstlisting}
+GET /chat HTTP/1.1
+Host: example.com
+Upgrade: websocket
+Connection: Upgrade
+\end{lstlisting}
+
+After the server responds with:
+
+\[
+101 \text{ Switching Protocols}
+\]
+
+the connection becomes a persistent, bidirectional channel.
+
+\[
+\boxed{\text{WebSocket upgrades HTTP into a full-duplex communication channel.}}
+\]
+
+\section*{Final Summary}
+
+\[
+\boxed{
+\begin{array}{l}
+\text{DNS maps human-readable names to IP addresses.} \\
+\text{HTTP fetches resources from servers.} \\
+\text{HTTP/1.1 is text-based and uses persistent TCP connections.} \\
+\text{HTTP/2 adds binary framing and multiplexing.} \\
+\text{HTTP/3 uses QUIC over UDP to remove TCP head-of-line blocking.} \\
+\text{Browsers coordinate many HTTP requests to build one web page.}
+\end{array}
+}
+\]
+
+\end{document}
